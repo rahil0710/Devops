@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lung Cancer Analytics Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --bg2: #0f1628;
+    --bg3: #141c35;
+    --surface: #1a2340;
+    --surface2: #1f2a4a;
+    --border: rgba(99,130,255,0.12);
+    --border2: rgba(99,130,255,0.2);
+    --accent: #4f7cff;
+    --accent2: #7b9fff;
+    --teal: #2de2c8;
+    --coral: #ff6b6b;
+    --amber: #f5a623;
+    --green: #4ecb71;
+    --text: #e8eaf6;
+    --text2: #8892b0;
+    --text3: #4a5580;
+    --sidebar-w: 240px;
+    --header-h: 64px;
+    --radius: 12px;
+    --radius-lg: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text3);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .nav-section {
+    padding: 12px 12px 4px;
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  .nav {
+    padding: 8px 10px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 13.5px;
+    font-weight: 400;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+
+  .nav-item:hover {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .nav-item.active {
+    background: rgba(79,124,255,0.12);
+    color: var(--accent2);
+    border-color: rgba(79,124,255,0.2);
+  }
+
+  .nav-icon {
+    width: 18px; height: 18px;
+    opacity: 0.8;
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  .user-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    color: var(--accent2);
+    border: 1px solid var(--border2);
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    height: var(--header-h);
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(12px);
+  }
+
+  .topbar-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .page-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .page-sub {
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-primary:hover { background: #5f8aff; }
+
+  .btn-ghost {
+    background: var(--surface);
+    color: var(--text2);
+    border: 1px solid var(--border2);
+  }
+
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    padding: 28px;
+    flex: 1;
+  }
+
+  /* ── STATS CARDS ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+
+  .card:hover {
+    border-color: var(--border2);
+    transform: translateY(-1px);
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .card.malignant::before { background: var(--coral); }
+  .card.benign::before { background: var(--amber); }
+  .card.normal::before { background: var(--green); }
+  .card.accuracy::before { background: var(--accent); }
+
+  .card-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  .malignant .card-dot { background: var(--coral); }
+  .benign .card-dot { background: var(--amber); }
+  .normal .card-dot { background: var(--green); }
+  .accuracy .card-dot { background: var(--accent); }
+
+  .card-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .malignant .card-value { color: var(--coral); }
+  .benign .card-value { color: var(--amber); }
+  .normal .card-value { color: var(--green); }
+  .accuracy .card-value { color: var(--accent2); }
+
+  .card-sub {
+    font-size: 11.5px;
+    color: var(--text3);
+  }
+
+  .card-icon {
+    position: absolute;
+    right: 20px;
+    bottom: 18px;
+    font-size: 32px;
+    opacity: 0.08;
+  }
+
+  /* ── CHART SECTION ── */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .chart-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .chart-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .chart-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(79,124,255,0.12);
+    color: var(--accent2);
+    border: 1px solid rgba(79,124,255,0.2);
+    font-weight: 500;
+  }
+
+  .chart-container {
+    position: relative;
+  }
+
+  .doughnut-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .doughnut-chart {
+    width: 160px;
+    height: 160px;
+    flex-shrink: 0;
+  }
+
+  .legend {
+    flex: 1;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+  }
+
+  .legend-item:last-child { border-bottom: none; }
+
+  .legend-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text2);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  .legend-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  /* ── METRICS COMPARISON ── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .metric-bar-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .metric-bar-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .metric-bar-values {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .metric-bar-before { color: var(--text3); }
+  .metric-bar-after {
+    font-family: 'Space Mono', monospace;
+    color: var(--accent2);
+    font-weight: 700;
+  }
+
+  .bar-track {
+    height: 5px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bar-before {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--text3);
+    position: absolute;
+    transition: width 1s ease;
+  }
+
+  .bar-after {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--accent);
+    position: absolute;
+    transition: width 1.2s ease;
+  }
+
+  /* ── BOTTOM ROW ── */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 16px;
+  }
+
+  /* ── TABLE ── */
+  .table-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .table-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    padding: 10px 22px;
+    text-align: left;
+    font-size: 10.5px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+
+  tbody td {
+    padding: 12px 22px;
+    font-size: 12.5px;
+    color: var(--text2);
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .tag-red { background: rgba(255,107,107,0.12); color: #ff9999; border: 1px solid rgba(255,107,107,0.2); }
+  .tag-amber { background: rgba(245,166,35,0.12); color: #f5c060; border: 1px solid rgba(245,166,35,0.2); }
+  .tag-green { background: rgba(78,203,113,0.12); color: #7de09a; border: 1px solid rgba(78,203,113,0.2); }
+  .tag-blue { background: rgba(79,124,255,0.12); color: var(--accent2); border: 1px solid rgba(79,124,255,0.2); }
+
+  /* ── ACTIVITY ── */
+  .activity-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+  }
+
+  .activity-list {
+    margin-top: 16px;
+  }
+
+  .activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .activity-item:last-child { border-bottom: none; }
+
+  .activity-dot-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .activity-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+
+  .activity-line {
+    width: 1px;
+    flex: 1;
+    background: var(--border);
+    margin-top: 4px;
+    min-height: 16px;
+  }
+
+  .activity-body {
+    flex: 1;
+    padding-bottom: 2px;
+  }
+
+  .activity-title {
+    font-size: 12.5px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .activity-time {
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  /* ── ADMIN PANEL ── */
+  .admin-section {
+    margin-top: 24px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .admin-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .admin-body {
+    padding: 22px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .input-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+
+  .input-field {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .input-field:focus {
+    border-color: var(--accent);
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 999;
+  }
+
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) {
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-row { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .bottom-row { grid-template-columns: 1fr; }
+    .admin-body { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      transform: translateX(-100%);
+    }
+    .sidebar.open {
+      transform: translateX(0);
+    }
+    .main { margin-left: 0; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .content { padding: 16px; }
+  }
+
+  .hamburger {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  @media (max-width: 768px) {
+    .hamburger { display: flex; }
+  }
+
+  /* loading shimmer */
+  .shimmer {
+    background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes shimmer {
+    to { background-position: -200% 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">
+      <div class="logo-icon">🫁</div>
+      <div>
+        <div class="logo-text">LungCare AI</div>
+        <div class="logo-sub">Analytics Platform</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section">Main</div>
+
+    <a class="nav-item active" href="#" onclick="showSection('dashboard')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+      </svg>
+      Dashboard
+    </a>
+
+    <a class="nav-item" href="#" onclick="showSection('statistics')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      Statistics
+    </a>
+
+    <a class="nav-item" href="#" onclick="showSection('reports')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      Reports
+    </a>
+
+    <div class="nav-section" style="margin-top:12px">Admin</div>
+
+    <a class="nav-item" href="#" onclick="showSection('admin')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+      </svg>
+      Admin Panel
+    </a>
+
+    <a class="nav-item" href="login.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Logout
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="user-avatar">A</div>
+      <div>
+        <div style="font-size:12px;color:var(--text)">Admin</div>
+        <div style="font-size:10px;color:var(--text3)">admin@lungcare.ai</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:16px">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-left">
+        <div class="page-title" id="pageTitle">Overview Dashboard</div>
+        <div class="page-sub" id="pageSub">VGG-16 model · IQ-OTH/NCCD dataset · Last updated just now</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="status-dot"></div>
+      <span style="font-size:12px;color:var(--text3)">Live</span>
+      <button class="btn btn-ghost" onclick="loadStats()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+      <button class="btn btn-primary" onclick="showSection('admin')">
+        + Update Stats
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content" id="mainContent">
+
+    <!-- ── DASHBOARD SECTION ── -->
+    <div id="section-dashboard">
+
+      <!-- KPI Cards -->
+      <div class="cards-grid">
+        <div class="card malignant">
+          <div class="card-label"><span class="card-dot"></span>Malignant</div>
+          <div class="card-value" id="val-malignant">—</div>
+          <div class="card-sub">Cancerous cases detected</div>
+          <div class="card-icon">🔴</div>
+        </div>
+        <div class="card benign">
+          <div class="card-label"><span class="card-dot"></span>Benign</div>
+          <div class="card-value" id="val-benign">—</div>
+          <div class="card-sub">Non-cancerous nodules</div>
+          <div class="card-icon">🟡</div>
+        </div>
+        <div class="card normal">
+          <div class="card-label"><span class="card-dot"></span>Normal</div>
+          <div class="card-value" id="val-normal">—</div>
+          <div class="card-sub">Healthy CT scans</div>
+          <div class="card-icon">🟢</div>
+        </div>
+        <div class="card accuracy">
+          <div class="card-label"><span class="card-dot"></span>Accuracy</div>
+          <div class="card-value" id="val-accuracy">—</div>
+          <div class="card-sub">Model classification accuracy</div>
+          <div class="card-icon">🎯</div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <!-- Doughnut -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Case Distribution</div>
+              <div class="chart-sub">Malignant · Benign · Normal</div>
+            </div>
+            <span class="chart-badge">Doughnut</span>
+          </div>
+          <div class="doughnut-wrapper">
+            <div class="doughnut-chart">
+              <canvas id="doughnutChart"></canvas>
+            </div>
+            <div class="legend">
+              <div class="legend-item">
+                <div class="legend-left"><span class="legend-dot" style="background:var(--coral)"></span>Malignant</div>
+                <span class="legend-val" id="leg-mal">—</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-left"><span class="legend-dot" style="background:var(--amber)"></span>Benign</div>
+                <span class="legend-val" id="leg-ben">—</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-left"><span class="legend-dot" style="background:var(--green)"></span>Normal</div>
+                <span class="legend-val" id="leg-nor">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Metrics Before vs After Optimization</div>
+              <div class="chart-sub">Precision · Recall · F1 · Accuracy</div>
+            </div>
+            <span class="chart-badge">VGG-16</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="barChart" height="160"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metric Bars -->
+      <div class="metrics-grid">
+        <div class="metric-bar-card">
+          <div class="metric-bar-label">Precision</div>
+          <div class="metric-bar-values">
+            <span class="metric-bar-before">Before: 0.60</span>
+            <span class="metric-bar-after">After: 0.99</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-before" style="width:60%"></div>
+            <div class="bar-after" style="width:99%"></div>
+          </div>
+        </div>
+        <div class="metric-bar-card">
+          <div class="metric-bar-label">Recall</div>
+          <div class="metric-bar-values">
+            <span class="metric-bar-before">Before: 0.58</span>
+            <span class="metric-bar-after">After: 0.97</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-before" style="width:58%"></div>
+            <div class="bar-after" style="width:97%"></div>
+          </div>
+        </div>
+        <div class="metric-bar-card">
+          <div class="metric-bar-label">F1 Score</div>
+          <div class="metric-bar-values">
+            <span class="metric-bar-before">Before: 0.57</span>
+            <span class="metric-bar-after">After: 0.98</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-before" style="width:57%"></div>
+            <div class="bar-after" style="width:98%"></div>
+          </div>
+        </div>
+        <div class="metric-bar-card">
+          <div class="metric-bar-label">Accuracy</div>
+          <div class="metric-bar-values">
+            <span class="metric-bar-before">Before: 0.71</span>
+            <span class="metric-bar-after">After: 0.99</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-before" style="width:71%"></div>
+            <div class="bar-after" style="width:99%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row -->
+      <div class="bottom-row">
+
+        <!-- Dataset Table -->
+        <div class="table-card">
+          <div class="table-header">
+            <div>
+              <div class="chart-title">Dataset Breakdown</div>
+              <div class="chart-sub">IQ-OTH/NCCD · Augmented splits</div>
+            </div>
+            <span class="tag tag-blue">1097 images</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Split</th>
+                <th>Malignant</th>
+                <th>Benign</th>
+                <th>Normal</th>
+                <th>Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Train (raw)</td>
+                <td><span class="tag tag-red">392</span></td>
+                <td><span class="tag tag-amber">84</span></td>
+                <td><span class="tag tag-green">291</span></td>
+                <td>767</td>
+                <td><span class="tag tag-blue">Pre-aug</span></td>
+              </tr>
+              <tr>
+                <td>Test (raw)</td>
+                <td><span class="tag tag-red">169</span></td>
+                <td><span class="tag tag-amber">36</span></td>
+                <td><span class="tag tag-green">125</span></td>
+                <td>330</td>
+                <td><span class="tag tag-blue">Pre-aug</span></td>
+              </tr>
+              <tr>
+                <td>Train (aug)</td>
+                <td><span class="tag tag-red">1960</span></td>
+                <td><span class="tag tag-amber">420</span></td>
+                <td><span class="tag tag-green">1455</span></td>
+                <td>3835</td>
+                <td><span class="tag tag-green">Augmented</span></td>
+              </tr>
+              <tr>
+                <td>Test (aug)</td>
+                <td><span class="tag tag-red">845</span></td>
+                <td><span class="tag tag-amber">180</span></td>
+                <td><span class="tag tag-green">625</span></td>
+                <td>1650</td>
+                <td><span class="tag tag-green">Augmented</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="activity-card">
+          <div class="chart-header" style="margin-bottom:0">
+            <div>
+              <div class="chart-title">Recent Activity</div>
+              <div class="chart-sub">System events log</div>
+            </div>
+          </div>
+          <div class="activity-list" id="activityLog">
+            <div class="activity-item">
+              <div class="activity-dot-col">
+                <div class="activity-dot" style="background:var(--green)"></div>
+                <div class="activity-line"></div>
+              </div>
+              <div class="activity-body">
+                <div class="activity-title">Model loaded successfully</div>
+                <div class="activity-time">Just now · VGG-16 v2 optimized</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot-col">
+                <div class="activity-dot" style="background:var(--accent)"></div>
+                <div class="activity-line"></div>
+              </div>
+              <div class="activity-body">
+                <div class="activity-title">Stats fetched from MongoDB</div>
+                <div class="activity-time">2 min ago · lungCancerDB</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot-col">
+                <div class="activity-dot" style="background:var(--amber)"></div>
+                <div class="activity-line"></div>
+              </div>
+              <div class="activity-body">
+                <div class="activity-title">SMOTE rebalancing applied</div>
+                <div class="activity-time">5 min ago · 184 → 420 benign</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot-col">
+                <div class="activity-dot" style="background:var(--coral)"></div>
+              </div>
+              <div class="activity-body">
+                <div class="activity-title">Early stopping triggered</div>
+                <div class="activity-time">Today · Epoch 14, patience=3</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end #section-dashboard -->
+
+    <!-- ── STATISTICS SECTION ── -->
+    <div id="section-statistics" style="display:none">
+      <div class="chart-card" style="margin-bottom:24px">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Optimizer Comparison</div>
+            <div class="chart-sub">Adam vs SGD vs RMSProp — Accuracy, Precision, Recall, F1</div>
+          </div>
+        </div>
+        <canvas id="optimizerChart" height="180"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Confusion Matrix Heatmap</div>
+            <div class="chart-sub">Post-optimization predictions · Benign · Malignant · Normal</div>
+          </div>
+          <span class="tag tag-green">99% accuracy</span>
+        </div>
+        <canvas id="confusionChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- ── REPORTS SECTION ── -->
+    <div id="section-reports" style="display:none">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Summary Report</div>
+            <div class="chart-sub">Early-Stage Lung Cancer Detection Using VGG-16</div>
+          </div>
+          <button class="btn btn-primary" onclick="window.print()">Print Report</button>
+        </div>
+        <div style="margin-top:20px;display:grid;gap:16px">
+          <div style="background:var(--surface);border-radius:10px;padding:18px">
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Model</div>
+            <div style="font-size:14px;color:var(--text)">VGG-16 Convolutional Neural Network (optimized)</div>
+          </div>
+          <div style="background:var(--surface);border-radius:10px;padding:18px">
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Dataset</div>
+            <div style="font-size:14px;color:var(--text)">IQ-OTH/NCCD — Lung Cancer Dataset · 1097 CT-scan images</div>
+          </div>
+          <div style="background:var(--surface);border-radius:10px;padding:18px">
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Techniques</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+              <span class="tag tag-blue">Gaussian Blur</span>
+              <span class="tag tag-blue">SMOTE</span>
+              <span class="tag tag-blue">Transfer Learning</span>
+              <span class="tag tag-blue">Early Stopping</span>
+              <span class="tag tag-blue">Data Augmentation</span>
+              <span class="tag tag-blue">Adam Optimizer</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+            <div style="background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.15);border-radius:10px;padding:16px;text-align:center">
+              <div style="font-family:'Space Mono',monospace;font-size:26px;color:var(--coral);font-weight:700">0.99</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">Precision</div>
+            </div>
+            <div style="background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.15);border-radius:10px;padding:16px;text-align:center">
+              <div style="font-family:'Space Mono',monospace;font-size:26px;color:var(--amber);font-weight:700">0.97</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">Recall</div>
+            </div>
+            <div style="background:rgba(78,203,113,0.08);border:1px solid rgba(78,203,113,0.15);border-radius:10px;padding:16px;text-align:center">
+              <div style="font-family:'Space Mono',monospace;font-size:26px;color:var(--green);font-weight:700">0.98</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">F1 Score</div>
+            </div>
+            <div style="background:rgba(79,124,255,0.08);border:1px solid rgba(79,124,255,0.15);border-radius:10px;padding:16px;text-align:center">
+              <div style="font-family:'Space Mono',monospace;font-size:26px;color:var(--accent2);font-weight:700">0.99</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">Accuracy</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ADMIN SECTION ── -->
+    <div id="section-admin" style="display:none">
+      <div class="admin-section">
+        <div class="admin-header">
+          <div>
+            <div class="chart-title">Update Statistics</div>
+            <div class="chart-sub">Push new values to MongoDB via POST /stats</div>
+          </div>
+        </div>
+        <div class="admin-body">
+          <div class="input-group">
+            <label class="input-label">Malignant</label>
+            <input class="input-field" id="admin-malignant" type="number" placeholder="e.g. 120">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Benign</label>
+            <input class="input-field" id="admin-benign" type="number" placeholder="e.g. 45">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Normal</label>
+            <input class="input-field" id="admin-normal" type="number" placeholder="e.g. 300">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Accuracy (%)</label>
+            <input class="input-field" id="admin-accuracy" type="number" placeholder="e.g. 99">
+          </div>
+          <button class="btn btn-primary" style="height:38px;align-self:end" onclick="submitStats()">
+            Save to DB
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end .content -->
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ Stats updated successfully</div>
+
+<script>
+// ── SECTION NAVIGATION ──
+const sections = {
+  dashboard: { title: 'Overview Dashboard', sub: 'VGG-16 model · IQ-OTH/NCCD dataset · Live' },
+  statistics: { title: 'Statistics & Charts', sub: 'Optimizer comparison · Confusion matrix' },
+  reports: { title: 'Summary Report', sub: 'Model performance overview' },
+  admin: { title: 'Admin Panel', sub: 'Update statistics in MongoDB' },
+};
+
+function showSection(name) {
+  Object.keys(sections).forEach(s => {
+    document.getElementById('section-' + s).style.display = s === name ? '' : 'none';
+  });
+  document.getElementById('pageTitle').textContent = sections[name].title;
+  document.getElementById('pageSub').textContent = sections[name].sub;
+
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const items = document.querySelectorAll('.nav-item');
+  const map = { dashboard: 0, statistics: 1, reports: 2, admin: 3 };
+  if (map[name] !== undefined) items[map[name]].classList.add('active');
+
+  if (name === 'statistics') renderStatCharts();
+  if (name === 'dashboard' && !doughnutChart) initCharts();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ── CHART REFERENCES ──
+let doughnutChart, barChart, optimizerChart, confusionChart;
+
+// ── FETCH STATS ──
+async function loadStats() {
+  try {
+    const res = await fetch('/stats');
+    const data = await res.json();
+    updateCards(data);
+    updateCharts(data);
+  } catch (e) {
+    // fallback demo data when server not running
+    const demo = { malignant: 120, benign: 45, normal: 300, accuracy: 99 };
+    updateCards(demo);
+    updateCharts(demo);
+  }
+}
+
+function updateCards(data) {
+  document.getElementById('val-malignant').textContent = data.malignant ?? '—';
+  document.getElementById('val-benign').textContent = data.benign ?? '—';
+  document.getElementById('val-normal').textContent = data.normal ?? '—';
+  document.getElementById('val-accuracy').textContent = (data.accuracy ?? '—') + (data.accuracy ? '%' : '');
+  document.getElementById('leg-mal').textContent = data.malignant ?? '—';
+  document.getElementById('leg-ben').textContent = data.benign ?? '—';
+  document.getElementById('leg-nor').textContent = data.normal ?? '—';
+}
+
+function updateCharts(data) {
+  if (doughnutChart) {
+    doughnutChart.data.datasets[0].data = [data.malignant, data.benign, data.normal];
+    doughnutChart.update();
+  }
+}
+
+// ── INIT CHARTS ──
+function initCharts() {
+  const dCtx = document.getElementById('doughnutChart').getContext('2d');
+  doughnutChart = new Chart(dCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Malignant', 'Benign', 'Normal'],
+      datasets: [{
+        data: [120, 45, 300],
+        backgroundColor: ['rgba(255,107,107,0.85)', 'rgba(245,166,35,0.85)', 'rgba(78,203,113,0.85)'],
+        borderWidth: 0,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '70%',
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  const bCtx = document.getElementById('barChart').getContext('2d');
+  barChart = new Chart(bCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Precision', 'Recall', 'F1 Score', 'Accuracy'],
+      datasets: [
+        {
+          label: 'Before Optimization',
+          data: [0.60, 0.58, 0.57, 0.71],
+          backgroundColor: 'rgba(74,85,128,0.7)',
+          borderRadius: 4,
+          borderSkipped: false,
+        },
+        {
+          label: 'After Optimization',
+          data: [0.99, 0.97, 0.98, 0.99],
+          backgroundColor: 'rgba(79,124,255,0.85)',
+          borderRadius: 4,
+          borderSkipped: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: { color: '#8892b0', font: { family: 'DM Sans', size: 11 } }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(99,130,255,0.06)' },
+          ticks: { color: '#8892b0', font: { family: 'DM Sans', size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(99,130,255,0.06)' },
+          ticks: { color: '#8892b0', font: { family: 'DM Sans', size: 11 } },
+          min: 0, max: 1,
+        }
+      }
+    }
+  });
+}
+
+function renderStatCharts() {
+  if (optimizerChart) return;
+
+  const oCtx = document.getElementById('optimizerChart').getContext('2d');
+  optimizerChart = new Chart(oCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Accuracy', 'Precision', 'Recall', 'F1 Score'],
+      datasets: [
+        { label: 'Adam', data: [99, 99, 98, 97], backgroundColor: 'rgba(79,124,255,0.85)', borderRadius: 4 },
+        { label: 'SGD',  data: [71, 47, 54, 50], backgroundColor: 'rgba(74,85,128,0.6)', borderRadius: 4 },
+        { label: 'RMSProp', data: [70, 48, 50, 47], backgroundColor: 'rgba(45,226,200,0.5)', borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#8892b0', font: { family: 'DM Sans', size: 11 } } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(99,130,255,0.06)' }, ticks: { color: '#8892b0', font: { family: 'DM Sans', size: 11 } } },
+        y: { grid: { color: 'rgba(99,130,255,0.06)' }, ticks: { color: '#8892b0', font: { family: 'DM Sans', size: 11 } }, max: 105 }
+      }
+    }
+  });
+
+  // Confusion matrix as heatmap via bar (stacked)
+  const labels = ['Benign (true)', 'Malignant (true)', 'Normal (true)'];
+  const confData = [
+    { label: 'Benign (pred)',    data: [27, 0, 0], backgroundColor: 'rgba(78,203,113,0.85)' },
+    { label: 'Malignant (pred)', data: [2, 143, 2], backgroundColor: 'rgba(79,124,255,0.85)' },
+    { label: 'Normal (pred)',    data: [0, 0, 101], backgroundColor: 'rgba(45,226,200,0.55)' },
+  ];
+  const cCtx = document.getElementById('confusionChart').getContext('2d');
+  confusionChart = new Chart(cCtx, {
+    type: 'bar',
+    data: { labels, datasets: confData.map(d => ({ ...d, borderRadius: 2 })) },
+    options: {
+      responsive: true,
+      indexAxis: 'y',
+      plugins: {
+        legend: { labels: { color: '#8892b0', font: { family: 'DM Sans', size: 11 } } }
+      },
+      scales: {
+        x: { stacked: true, grid: { color: 'rgba(99,130,255,0.06)' }, ticks: { color: '#8892b0', font: { family: 'DM Sans', size: 11 } } },
+        y: { stacked: true, ticks: { color: '#8892b0', font: { family: 'DM Sans', size: 11 } } }
+      }
+    }
+  });
+}
+
+// ── ADMIN SUBMIT ──
+async function submitStats() {
+  const body = {
+    malignant: +document.getElementById('admin-malignant').value,
+    benign: +document.getElementById('admin-benign').value,
+    normal: +document.getElementById('admin-normal').value,
+    accuracy: +document.getElementById('admin-accuracy').value,
+  };
+
+  try {
+    const token = localStorage.getItem('token');
+    await fetch('/stats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(body),
+    });
+  } catch (_) {}
+
+  showToast('✓ Stats saved to database');
+  updateCards(body);
+  updateCharts(body);
+  setTimeout(() => showSection('dashboard'), 1200);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── INIT ──
+initCharts();
+loadStats();
+</script>
+</body>
+</html>

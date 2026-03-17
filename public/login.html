@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LungCare AI — Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --bg2: #0f1628;
+    --surface: #1a2340;
+    --surface2: #1f2a4a;
+    --border: rgba(99,130,255,0.12);
+    --border2: rgba(99,130,255,0.25);
+    --accent: #4f7cff;
+    --accent2: #7b9fff;
+    --teal: #2de2c8;
+    --coral: #ff6b6b;
+    --green: #4ecb71;
+    --text: #e8eaf6;
+    --text2: #8892b0;
+    --text3: #4a5580;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,124,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,124,255,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  /* glow orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    opacity: 0.35;
+  }
+
+  .orb-1 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(79,124,255,0.4) 0%, transparent 70%);
+    top: -150px; left: -100px;
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+
+  .orb-2 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(45,226,200,0.3) 0%, transparent 70%);
+    bottom: -100px; right: -80px;
+    animation: drift 15s ease-in-out infinite alternate-reverse;
+  }
+
+  @keyframes drift {
+    from { transform: translate(0, 0); }
+    to { transform: translate(30px, 20px); }
+  }
+
+  .login-card {
+    width: 420px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  }
+
+  .login-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+
+  .logo-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .logo-tag {
+    font-size: 11px;
+    color: var(--text3);
+    font-weight: 400;
+    margin-top: 1px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 28px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  label {
+    display: block;
+    font-size: 11.5px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    margin-bottom: 7px;
+  }
+
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79,124,255,0.12);
+  }
+
+  .btn-login {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    margin-top: 8px;
+  }
+
+  .btn-login:hover { background: #5f8aff; }
+  .btn-login:active { transform: scale(0.99); }
+
+  .error-msg {
+    font-size: 12px;
+    color: var(--coral);
+    text-align: center;
+    margin-top: 12px;
+    min-height: 18px;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0 20px;
+    color: var(--text3);
+    font-size: 11px;
+  }
+
+  .divider::before,
+  .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .stat-mini {
+    text-align: center;
+    padding: 10px 8px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .stat-mini-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  .stat-mini-lbl {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .spinner {
+    display: none;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="login-card">
+  <div class="login-logo">
+    <div class="logo-icon">🫁</div>
+    <div>
+      <div class="logo-name">LungCare AI</div>
+      <div class="logo-tag">Analytics & Detection Platform</div>
+    </div>
+  </div>
+
+  <h1>Welcome back</h1>
+  <div class="subtitle">Sign in to access your analytics dashboard</div>
+
+  <div class="form-group">
+    <label>Username</label>
+    <input type="text" id="username" placeholder="Enter your username" autocomplete="username">
+  </div>
+
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+  </div>
+
+  <button class="btn-login" onclick="handleLogin()">
+    <span id="btn-text">Sign In</span>
+    <div class="spinner" id="spinner"></div>
+  </button>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="stats-row">
+    <div class="stat-mini">
+      <div class="stat-mini-val">99%</div>
+      <div class="stat-mini-lbl">Accuracy</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-val">1097</div>
+      <div class="stat-mini-lbl">CT Images</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-val">VGG-16</div>
+      <div class="stat-mini-lbl">Model</div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function handleLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const btnText = document.getElementById('btn-text');
+  const spinner = document.getElementById('spinner');
+  const errorMsg = document.getElementById('errorMsg');
+
+  if (!username || !password) {
+    errorMsg.textContent = 'Please fill in all fields';
+    return;
+  }
+
+  btnText.style.display = 'none';
+  spinner.style.display = 'block';
+  errorMsg.textContent = '';
+
+  try {
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.token) {
+      localStorage.setItem('token', data.token);
+      window.location.href = '/dashboard.html';
+    } else {
+      throw new Error(data.message || 'Invalid credentials');
+    }
+  } catch (err) {
+    errorMsg.textContent = err.message || 'Login failed. Please try again.';
+    btnText.style.display = 'block';
+    spinner.style.display = 'none';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+</script>
+</body>
+</html>
